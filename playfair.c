@@ -4,7 +4,7 @@
 
 
 
-int is_validate_key(char key[26]){
+int is_valid_key(char key[26]){
     int char_count[128] = {0}; 
     for(int i = 0; i < strlen(key); i++){
         if(char_count[(int)key[i]] != 0){ 
@@ -160,7 +160,7 @@ int main(){
     printf("Enter key: ");
     scanf("%s", key);
 
-    if(!is_validate_key(key)){
+    if(!is_valid_key(key)){
         printf("Error: Repeating character found in key\n");
         exit(1);
     }
