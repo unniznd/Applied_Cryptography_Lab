@@ -133,12 +133,22 @@ void decrypt(char key_matrix[6][6], char *plaintext, char *ciphertext, int len){
         get_position(key_matrix, plaintext[i+1], pos1);
 
         if(pos0[0] == pos1[0]){
-            ciphertext[i] = key_matrix[pos1[0]][(pos0[1] - 1) % 6];
-            ciphertext[i+1] = key_matrix[pos1[0]][(pos1[1] - 1) % 6];
+            if(pos0[1] == 0)
+                pos0[1] = 6;
+            if(pos1[1] == 0)
+                pos1[1] = 6;
+            
+                
+            ciphertext[i] = key_matrix[pos1[0]][((pos0[1] - 1) % 6)];
+            ciphertext[i+1] = key_matrix[pos1[0]][((pos1[1] - 1) % 6)];
         }
         else if(pos0[1] == pos1[1]){
-            ciphertext[i] = key_matrix[(pos0[0] - 1) % 6][pos1[1]];
-            ciphertext[i+1] = key_matrix[(pos1[0] - 1) % 6][pos1[1]];
+            if(pos0[0] == 0)
+                pos0[0] = 6;
+            if(pos1[0] == 0)
+                pos1[0] = 6;
+            ciphertext[i] = key_matrix[((pos0[0] - 1) % 6)][pos1[1]];
+            ciphertext[i+1] = key_matrix[((pos1[0] - 1) % 6)][pos1[1]];
         }
         else{
             ciphertext[i] = key_matrix[pos0[0]][pos1[1]];
