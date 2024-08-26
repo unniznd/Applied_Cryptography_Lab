@@ -4,6 +4,10 @@
 #include<ctype.h>
 
 
+int addition_char[100] = {0};
+
+
+
 int is_valid_key(char key[26]){
     int char_count[128] = {0}; 
     for(int i = 0; i < strlen(key); i++){
@@ -85,10 +89,12 @@ void preprocess_plaintext(char *temp_plaintext, char *plaintext, int temp_len){
         plaintext[idx++] = temp_plaintext[i];
         if(i < temp_len - 1 && temp_plaintext[i] == temp_plaintext[i + 1]){
             plaintext[idx++] = (temp_plaintext[i] == 'x') ? 'y' : 'x';
+            addition_char[i+1] = 1;
         }
     }
     if(idx % 2 != 0){
         plaintext[idx] = (plaintext[idx - 1] == 'x') ? 'y' : 'x';
+        addition_char[idx] = 1;
     }
 }
 
@@ -146,6 +152,7 @@ void decrypt(char key_matrix[6][6], char *plaintext, char *ciphertext, int len){
         }
     }
 }
+
 
 void display_key_matrix(char matrix[6][6]){
     for(int i = 0; i<6; i++){
@@ -214,10 +221,11 @@ int main(){
 
     printf("Decrypted text: ");
     for(int i = 0; i<len; i++){
+        if(addition_char[i] == 1)
+            continue;
         printf("%c", decrypted_text[i]);
     }
 
     printf("\n");
-
     return 0;
 }
