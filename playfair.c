@@ -1,13 +1,13 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
-
+#include<ctype.h>
 
 
 int is_valid_key(char key[26]){
     int char_count[128] = {0}; 
     for(int i = 0; i < strlen(key); i++){
-        if(char_count[(int)key[i]] != 0){ 
+        if(char_count[(int)key[i]] != 0 ){ 
             return 0;
         }
         char_count[(int)key[i]] = 1;  
@@ -19,6 +19,9 @@ void init_key_matrx(char matrix[6][6], char key[26]){
     int char_count[128] = {0}; 
     int row_index = 0, col_index = 0;
     for(int i = 0; i<strlen(key); i++){
+        if(65 <= (int) key [i] && (int) key[i]<= 90){
+            key[i] = (char)((int) key[i] + 32);
+        }
         matrix[row_index][col_index] = key[i];
         char_count[(int)key[i]] = 1;
 
@@ -76,6 +79,9 @@ int find_repeat_char_count(char *temp_plaintext, int temp_len){
 void preprocess_plaintext(char *temp_plaintext, char *plaintext, int temp_len){
     int idx = 0;
     for(int i = 0; i < temp_len; i++){
+        if(65 <= (int) temp_plaintext[i] && (int) temp_plaintext[i] <= 'Z'){
+            temp_plaintext[i] = (char)((int) temp_plaintext[i] + 32);
+        }
         plaintext[idx++] = temp_plaintext[i];
         if(i < temp_len - 1 && temp_plaintext[i] == temp_plaintext[i + 1]){
             plaintext[idx++] = (temp_plaintext[i] == 'x') ? 'y' : 'x';
@@ -187,6 +193,7 @@ int main(){
     char plaintext[len];
     preprocess_plaintext(temp_plaintext, plaintext, temp_len);
 
+    printf("Preprocessed plaintext: ");
     for(int i = 0; i<len; i++){
         printf("%c", plaintext[i]);
     }
@@ -195,7 +202,8 @@ int main(){
     char ciphertext[len];
     encrypt(key_matrix, plaintext, ciphertext, len);
 
-    
+
+    printf("Ciphertext: ");
     for(int i = 0; i<len; i++){
         printf("%c", ciphertext[i]);
     }
@@ -204,6 +212,7 @@ int main(){
     char decrypted_text[len];
     decrypt(key_matrix, ciphertext, decrypted_text, len);
 
+    printf("Decrypted text: ");
     for(int i = 0; i<len; i++){
         printf("%c", decrypted_text[i]);
     }
