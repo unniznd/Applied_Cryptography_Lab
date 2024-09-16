@@ -54,20 +54,11 @@ uint8_t calculate_rcon(uint8_t round) {
     return rcon;
 }
 
-int main() {
-    char input[33]; 
-    uint32_t word[44]; 
-    
-    printf("Enter a 32-character hex string: ");
-    scanf("%32s", input);
-
-    sscanf(input, "%8x%8x%8x%8x", &word[0], &word[1], &word[2], &word[3]);
-
+void key_expansion(uint32_t word[44], uint8_t sbox[256]){
     uint32_t temp;
     uint8_t temp0, temp1, temp2, temp3;
     uint8_t rcon;
-    uint8_t sbox[256];
-    initialize_aes_sbox(sbox);
+    
     
     for(int i = 4; i < 44; i++) {
         temp = word[i - 1];
@@ -86,6 +77,22 @@ int main() {
         word[i] = word[i - 4] ^ temp;
     }
 
+}
+
+int main() {
+    char input[33]; 
+    uint32_t word[44]; 
+    
+    printf("Enter a 32-character hex string: ");
+    scanf("%32s", input);
+
+    sscanf(input, "%8x%8x%8x%8x", &word[0], &word[1], &word[2], &word[3]);
+
+    uint8_t sbox[256];
+    initialize_aes_sbox(sbox);
+
+    key_expansion(word, sbox);
+    
     printf("Key schedule:\n");
     for(int i = 0; i < 44; i = i + 4) {
         printf("%08x %08x %08x %08x\n", word[i], word[i + 1], word[i + 2], word[i + 3]);
