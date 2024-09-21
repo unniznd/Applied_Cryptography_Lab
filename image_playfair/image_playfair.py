@@ -18,21 +18,37 @@ class ImagePlayfair:
 
     def encrypt(self, keyImage, inputImage):
             self.__generateKeyMatrix(keyImage)
-            R,G,B,A,sizes=self.__getRGB(inputImage,False)
+            R,G,B,A,sizes=self.__getRGB(inputImage, False)
            
             encryptedR=np.full(len(R),-1)
             encryptedG=np.full(len(G),-1)
             encryptedB=np.full(len(B),-1)
+
             
             halfLength = len(R)//2
             for i in range(halfLength):
                 self.__encryptDecryptPixel(encryptedR,i,halfLength, self.RkeyMatrix,R)
-                self.__encryptDecryptPixel(encryptedG,i,halfLength, self.RkeyMatrix,G)
-                self.__encryptDecryptPixel(encryptedB,i,halfLength, self.RkeyMatrix,B)
-            fullImage1D=[]
+                self.__encryptDecryptPixel(encryptedG,i,halfLength, self.GkeyMatrix,G)
+                self.__encryptDecryptPixel(encryptedB,i,halfLength, self.BkeyMatrix,B)
+        
            
+                self.__encryptDecryptPixel(encryptedR,i,halfLength, self.GkeyMatrix,R, False)
+                self.__encryptDecryptPixel(encryptedG,i,halfLength, self.BkeyMatrix,G, False)
+                self.__encryptDecryptPixel(encryptedB,i,halfLength, self.RkeyMatrix,B, False)    
+        
+                self.__encryptDecryptPixel(encryptedR,i,halfLength, self.BkeyMatrix,R, False)
+                self.__encryptDecryptPixel(encryptedG,i,halfLength, self.RkeyMatrix,G, False)
+                self.__encryptDecryptPixel(encryptedB,i,halfLength, self.GkeyMatrix,B, False)  
+            
+            fullImage1D=[]
+            encryptedB = np.concatenate((encryptedB[halfLength:],encryptedB[:halfLength]))
+            encryptedG = np.concatenate((encryptedG[halfLength:],encryptedG[:halfLength]))
+            encryptedR = np.concatenate((encryptedR[halfLength:],encryptedR[:halfLength]))
+
+           
+            n = len(encryptedR) - 1
             for i in range(len(encryptedR)):
-                fullImage1D.append([encryptedR[i],encryptedG[i],encryptedB[i],A[i]])
+                fullImage1D.append([encryptedR[n - i],encryptedG[i],encryptedB[n - i],A[i]])
             
             x,y,z=sizes[0],sizes[1],4
             imageArr = np.reshape(fullImage1D,(y,x,z))
@@ -50,35 +66,62 @@ class ImagePlayfair:
         decryptedG=np.full(len(G),-1)
         decryptedB=np.full(len(B),-1)
 
+      
+        
+
+
         halfLength = len(R)//2
         for i in range(halfLength):
             
             self.__encryptDecryptPixel(decryptedR,i,halfLength, self.RkeyMatrix,R,False)
-            self.__encryptDecryptPixel(decryptedG,i,halfLength, self.RkeyMatrix,G,False)
-            self.__encryptDecryptPixel(decryptedB,i,halfLength, self.RkeyMatrix,B,False)
+            self.__encryptDecryptPixel(decryptedG,i,halfLength, self.GkeyMatrix,G,False)
+            self.__encryptDecryptPixel(decryptedB,i,halfLength, self.BkeyMatrix,B,False)
+
+            self.__encryptDecryptPixel(decryptedR,i,halfLength, self.GkeyMatrix,R)
+            self.__encryptDecryptPixel(decryptedG,i,halfLength, self.BkeyMatrix,G)
+            self.__encryptDecryptPixel(decryptedB,i,halfLength, self.RkeyMatrix,B)
+
+            self.__encryptDecryptPixel(decryptedR,i,halfLength, self.BkeyMatrix,R)
+            self.__encryptDecryptPixel(decryptedG,i,halfLength, self.RkeyMatrix,G)
+            self.__encryptDecryptPixel(decryptedB,i,halfLength, self.GkeyMatrix,B)
+
+           
+           
             
         fullImage1D=[]
-    
+
+        decryptedB = np.concatenate((decryptedB[halfLength:],decryptedB[:halfLength]))
+        decryptedG = np.concatenate((decryptedG[halfLength:],decryptedG[:halfLength]))
+        decryptedR = np.concatenate((decryptedR[halfLength:],decryptedR[:halfLength]))
+
+        n = len(decryptedR) - 1
         for i in range(len(decryptedR)):
-            fullImage1D.append([decryptedR[i],decryptedG[i],decryptedB[i],A[i]])
+            fullImage1D.append([decryptedR[n - i],decryptedG[i],decryptedB[n - i],A[i]])
 
         x,y,z=sizes[0],sizes[1],4
         imageArr = np.reshape(fullImage1D,(y,x,z))
         image = Image.fromarray(imageArr.astype('uint8'),'RGBA')
         image.save('original.png')
     
+    
+    
+        
+
     def __generateKeyMatrix(self, filename):
             R,G,B,A,s=self.__getRGB(filename,True)
             R=self.__removeDuplicates(R)
             G=self.__removeDuplicates(G)
             B=self.__removeDuplicates(B)
+            A=self.__removeDuplicates(A)
             R.extend([x for x in range(256) if x not in R])
             self.RkeyMatrix = np.reshape(R, (16,16))
             G.extend([x for x in range(256) if x not in G])
-            GkeyMatrix = np.reshape(G, (16,16))
+            self.GkeyMatrix = np.reshape(G, (16,16))
             B.extend([x for x in range(256) if x not in B])
-            BkeyMatrix = np.reshape(B, (16,16))
-    
+            self.BkeyMatrix = np.reshape(B, (16,16))
+            
+            
+            
     def __removeDuplicates(self, array):
         newArr = []
         for i in array:
