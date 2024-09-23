@@ -11,9 +11,9 @@ unsigned char gmul(unsigned char a, unsigned char b) {
     while(b){
         if ((b & 1) == 1)
             p ^= a;
-        hi_bit_set = (a & 0x20);  
+        hi_bit_set = (a & max);  
         a <<= 1;                        
-        if (hi_bit_set == 0x20)    
+        if (hi_bit_set == max)    
             a ^= irreducible;
         b >>= 1;                        
     }
