@@ -1,72 +1,113 @@
 #include <stdio.h>
+#include <stdint.h>
 
-
-
-unsigned char anti_log[256];
-unsigned char glog[256];
-
+unsigned char irreducible ;
+unsigned char max;
 
 unsigned char gmul(unsigned char a, unsigned char b) {
     unsigned char p = 0;
-    unsigned char counter;
     unsigned char hi_bit_set;
 
-    for (counter = 0;counter < 8;counter++) {
+    while(b){
         if ((b & 1) == 1)
-                p ^= a;
-        hi_bit_set = (a & 0x80);
-        a <<= 1;
-        if (hi_bit_set == 0x80)
-                a ^= 0x1b;
-        b >>= 1;
+            p ^= a;
+        hi_bit_set = (a & 0x20);  
+        a <<= 1;                        
+        if (hi_bit_set == 0x20)    
+            a ^= irreducible;
+        b >>= 1;                        
     }
     return p;
 }
 
-int init() {
-    int i;
-    unsigned char p;
-    anti_log[0]=0;
-    p=1;
+// Costly operation
+unsigned char gdiv(unsigned char a, unsigned char b){
+    unsigned char q = 0;
+    unsigned char i = 0;
+    unsigned char product = 0;
+    unsigned char temp = 0;
 
-    printf("\n");
-    for (i = 1;i < 256; i++) {
-        p = gmul(p, 0xe5);
-        anti_log[i] = p;
+    if (b > a){
+        temp = a;
+        a = b;
+        b = temp;
     }
-   
-   
-    unsigned char temp;
-    glog[0] = 0;
-    glog[1] = 1;
 
-    for (i = 1;i < 256;i++) {
-        temp = anti_log[i];
-        glog[temp]=i;
+    while(i < 8){
+        product = gmul(b, i+1);
+
+        if(product == a){
+            q ^= i+1;
+            break;
+        }
+        if((product ^ a) < b){
+            q ^= i+1;
+            
+            a ^= product;
+            if(a == 0 || a < b){
+                break;
+            }
+
+            i = 0;
+        }
+        i++;
     }
-    glog[1]=0x00;
+
+    return q;
+}
+
+void extended_euclidean(
+    unsigned char num1, unsigned char num2, 
+    unsigned char *x, unsigned char *y
+){
+    if(num2 == 0){
+        *x = 1;
+        *y = 0;
+    }
+    unsigned char x1 = 1, x2 = 0, y1 = 0, y2 = 1;
+    unsigned char q, r;
+    while(num2 != 0){
+        q = gdiv(num1, num2);
+        
+        r = num1 ^ (unsigned char) (gmul(q, num2));
+        if(q == 0) break;
+
+        *x = x1 ^ gmul(q, x2);
+        *y = y1 ^ gmul(q, y2);
+
+        num1 = num2;
+        num2 = r;
+
+        x1 = x2;
+        x2 = *x;
+
+        y1 = y2;
+        y2 = *y;
+    }
+    
+    *x = x1;
+    *y = y1;
 }
 
 
 int main() {
-    init();
+    printf("Enter irreducible polynomial: ");
+    scanf("%x", &irreducible);
+    unsigned char temp = irreducible;
+    max = 1;
+    while(temp > 0){
+        temp >>= 1;
+        max <<= 1;
+    }
+    unsigned char num;
+    printf("Enter number: ");
+    scanf("%x", &num);
 
-    /* try and multiply with log tables */
-    int a;
-    unsigned char result;
-    printf("Enter number to calculate multiplicative inverse <0x00 - 0xff>? ");
-    if (scanf("%x", &a) < 0) {
-        printf("\nincorrect usage\n");
-        return 1;
-    }
-    if (a > 255 || a < 0) {
-        printf("number between 0-ff please!\n");
-        return 1;
-    }
-    if (a == 0) {
-        result = 0;
-    } else {
-        result = anti_log[(255 - glog[a])];
-    }
-    printf("result = %x\n", result);
+    unsigned char x, y;
+    extended_euclidean(irreducible, num, &x, &y);
+    if(x<0) x = x ^ irreducible;
+    if(y<0) y = y ^ irreducible;
+
+
+    printf("Multiplicative inverse of %x is %x\n", num, y);
 }
