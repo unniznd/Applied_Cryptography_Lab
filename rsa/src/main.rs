@@ -130,7 +130,8 @@ fn main() {
     
     let d = rsa.generate_key(e);
 
-    println!("d: {}", d);
+    println!("Public key: ({},{})", e, rsa.n);
+    println!("Private key: ({},{})", d, rsa.n);
 
     println!("Enter a message:");
 
