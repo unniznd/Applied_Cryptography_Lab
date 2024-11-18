@@ -1,31 +1,30 @@
-struct RSA{
-    n:i128,
-    phin: i128
+use std::io::{self};
+
+struct RSA {
+    n: i128,
+    phin: i128,
 }
 
-impl RSA{
-    fn new(p:i128,q:i128)->Self{
-        if !Self::is_prime(p) || !Self::is_prime(q){
+impl RSA {
+    fn new(p: i128, q: i128) -> Self {
+        if !Self::is_prime(p) || !Self::is_prime(q) {
             panic!("Both numbers must be prime");
         }
-        RSA{
-            n:p*q,
-            phin:(p-1)*(q-1)
+        RSA {
+            n: p * q,
+            phin: (p - 1) * (q - 1),
         }
     }
 
-    fn is_prime(num:i128) -> bool{
+    fn is_prime(num: i128) -> bool {
         if num <= 1 {
             return false;
-        }
-        if num == 2 {
-            return true;
         }
         if num % 2 == 0 {
             return false;
         }
         let mut i = 3;
-        while i*i <= num/2 {
+        while i * i <= num {
             if num % i == 0 {
                 return false;
             }
@@ -33,7 +32,7 @@ impl RSA{
         }
         true
     }
-    
+
     fn generate_key(&self, e: i128) -> i128{
         let mut a = self.phin;
         let mut b = e;
@@ -71,84 +70,65 @@ impl RSA{
         y0
     }
 
-    fn encrypt(&self, message: i128, e: i128) -> i128{
-        let mut result = 1;
-        for _ in 0..e{
-            result = (result * message) % self.n;
-        }
-        result
+    fn encrypt(&self, message: &str, e: i128) -> Vec<i128> {
+        message
+            .bytes()
+            .map(|byte| {
+                let mut result = 1;
+                let m = byte as i128;
+                for _ in 0..e {
+                    result = (result * m) % self.n;
+                }
+                result
+            })
+            .collect()
     }
 
-    fn decrypt(&self, message: i128, d: i128) -> i128{
-        let mut result = 1;
-        for _ in 0..d{
-            result = (result * message) % self.n;
-        }
-        result
+    fn decrypt(&self, encrypted_message: Vec<i128>, d: i128) -> String {
+        encrypted_message
+            .iter()
+            .map(|&c| {
+                let mut result = 1;
+                for _ in 0..d {
+                    result = (result * c) % self.n;
+                }
+                result as u8 as char
+            })
+            .collect()
     }
 }
 
 fn main() {
     println!("Enter two prime numbers:");
 
-    let mut p = String::new();
-    let mut q = String::new();
+    let mut input = String::new();
+    io::stdin().read_line(&mut input).expect("Failed to read input");
+    let p: i128 = input.trim().parse().expect("Invalid input");
 
-    std::io::stdin()
-    .read_line(&mut p)
-    .expect("Failed to read input");
-
-    std::io::stdin()
-    .read_line(&mut q)
-    .expect("Failed to read input");
-
-    let p = match p.trim().parse::<i128>(){
-        Ok(num) => num,
-        Err(_) => panic!("Invalid input")
-    };
-
-    let q = match q.trim().parse::<i128>(){
-        Ok(num) => num,
-        Err(_) => panic!("Invalid input")
-    };
+    input.clear();
+    io::stdin().read_line(&mut input).expect("Failed to read input");
+    let q: i128 = input.trim().parse().expect("Invalid input");
 
     let rsa = RSA::new(p, q);
 
     println!("Enter a number e:");
+    input.clear();
+    io::stdin().read_line(&mut input).expect("Failed to read input");
+    let e: i128 = input.trim().parse().expect("Invalid input");
 
-    let mut e = String::new();
-
-    std::io::stdin()
-    .read_line(&mut e)
-    .expect("Failed to read input");
-
-    let e = match e.trim().parse::<i128>(){
-        Ok(num) => num,
-        Err(_) => panic!("Invalid input")
-    };
-
-    
     let d = rsa.generate_key(e);
 
     println!("Public key: ({},{})", e, rsa.n);
     println!("Private key: ({},{})", d, rsa.n);
 
     println!("Enter a message:");
-
-    let mut message = String::new();
-    
-    std::io::stdin()
-    .read_line(&mut message)
-    .expect("Failed to read input");
-
-    let message = match message.trim().parse::<i128>(){
-        Ok(num) => num,
-        Err(_) => panic!("Invalid input")
-    };
+    input.clear();
+    io::stdin().read_line(&mut input).expect("Failed to read input");
+    let message = input.trim();
 
     let encrypted_message = rsa.encrypt(message, e);
-    println!("Encrypted message: {}", encrypted_message);
+    println!("Encrypted message: {:?}", encrypted_message);
 
     let decrypted_message = rsa.decrypt(encrypted_message, d);
-    println!("Decrypted message: {}", decrypted_message);
+    println!("Decrypted message: {:?}", decrypted_message);
 }
